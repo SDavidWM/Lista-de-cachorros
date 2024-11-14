@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Cachorros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #fff;
+        }
+        button {
+            padding: 6px 12px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            margin-bottom: 20px;
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            text-align: right;
+        }
+        .modal-footer button {
+            background-color: #007bff;
+            color: white;
+        }
+        input, label {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .dog-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lista de Cachorros</h1>
+    <button class="btn-add" onclick="mostrarModalAdicionar()">Adicionar Cachorro</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Nome do Cachorro</th>
+                <th>Nome do Dono(a)</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-cachorros">
+            <!-- Dados da tabela vão ser carregados aqui -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Adicionar -->
+<div id="modal-adicionar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Adicionar Cachorro</h2>
+        </div>
+        <form id="form-adicionar">
+            <label for="nome">Nome do Cachorro</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="dono">Nome do Dono(a)</label>
+            <input type="text" id="dono" name="dono" required>
+
+            <label for="telefone">Telefone</label>
+            <input type="text" id="telefone" name="telefone" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <div class="modal-footer">
+                <button type="button" onclick="fecharModalAdicionar()">Fechar</button>
+                <button type="submit">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="modal-editar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Editar Cachorro</h2>
+        </div>
+        <form id="form-editar">
+            <input type="hidden" id="id-editar">
+            <label for="nome-editar">Nome do Cachorro</label>
+            <input type="text" id="nome-editar" name="nome-editar" required>
+
+            <label for="dono-editar">Nome do Dono(a)</label>
+            <input type="text" id="dono-editar" name="dono-editar" required>
+
+            <label for="telefone-editar">Telefone</label>
+            <input type="text" id="telefone-editar" name="telefone-editar" required>
+
+            <label for="email-editar">Email</label>
+            <input type="email" id="email-editar" name="email-editar" required>
+
+            <div class="modal-footer">
+                <button type="button" onclick="fecharModalEditar()">Fechar</button>
+                <button type="submit">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Excluir -->
+<div id="modal-excluir" class="modal">
+    <div class="modal-content">
+        <h3>Tem certeza que deseja excluir este cachorro?</h3>
+        <div class="modal-footer">
+            <button type="button" onclick="fecharModalExcluir()">Cancelar</button>
+            <button type="button" onclick="confirmarExcluir()">Excluir</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Array para armazenar os cachorros
+    let cachorros = [];
+
+    // Função para carregar a tabela com os cachorros
+    function carregarTabela() {
+        const tabelaBody = document.getElementById('tabela-cachorros');
+        tabelaBody.innerHTML = ''; // Limpa a tabela antes de adicionar novos dados
+
+        cachorros.forEach(cachorro => {
+            const linha = document.createElement('tr');
+
+            linha.innerHTML = `
+                <td><img class="dog-image" src="${cachorro.imagem}" alt="Imagem do Cachorro"></td>
+                <td>${cachorro.nome}</td>
+                <td>${cachorro.dono}</td>
+                <td>${cachorro.telefone}</td>
+                <td>${cachorro.email}</td>
+                <td>
+                    <button class="btn-edit" onclick="mostrarModalEditar(${cachorro.id})">Editar</button>
+                    <button class="btn-delete" onclick="mostrarModalExcluir(${cachorro.id})">Excluir</button>
+                </td>
+            `;
+            tabelaBody.appendChild(linha);
+        });
+    }
+
+    // Função para adicionar cachorro
+    async function adicionarCachorro(nome, dono, telefone, email) {
+        // Obter imagem aleatória de cachorro
+        const respostaImagem = await fetch('https://dog.ceo/api/breeds/image/random');
+        const dadosImagem = await respostaImagem.json();
+        const imagem = dadosImagem.message;
+
+        const id = Date.now(); // Gerar um ID único para o cachorro
+        const cachorro = { id, nome, dono, telefone, email, imagem };
+        cachorros.push(cachorro);
+        carregarTabela();
+    }
+
+    // Função para abrir o modal de adicionar
+    function mostrarModalAdicionar() {
+        document.getElementById('modal-adicionar').style.display = 'block';
+    }
+
+    // Fechar modal adicionar
+    function fecharModalAdicionar() {
+        document.getElementById('modal-adicionar').style.display = 'none';
+    }
+
+    // Função para abrir o modal de editar
+    function mostrarModalEditar(id) {
+        const cachorro = cachorros.find(c => c.id === id);
+        document.getElementById('id-editar').value = cachorro.id;
+        document.getElementById('nome-editar').value = cachorro.nome;
+        document.getElementById('dono-editar').value = cachorro.dono;
+        document.getElementById('telefone-editar').value = cachorro.telefone;
+        document.getElementById('email-editar').value = cachorro.email;
+        document.getElementById('modal-editar').style.display = 'block';
+    }
+
+    // Fechar modal editar
+    function fecharModalEditar() {
+        document.getElementById('modal-editar').style.display = 'none';
+    }
+
+    // Função para abrir o modal de excluir
+    function mostrarModalExcluir(id) {
+        cachorroIdExcluir = id;
+        document.getElementById('modal-excluir').style.display = 'block';
+    }
+
+    // Fechar modal excluir
+    function fecharModalExcluir() {
+        document.getElementById('modal-excluir').style.display = 'none';
+    }
+
+    // Confirmar exclusão
+    function confirmarExcluir() {
+        cachorros = cachorros.filter(c => c.id !== cachorroIdExcluir);
+        carregarTabela();
+        fecharModalExcluir();
+    }
+
+    // Adicionar cachorro ao array e recarregar a tabela
+    document.getElementById('form-adicionar').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nome = document.getElementById('nome').value;
+        const dono = document.getElementById('dono').value;
+        const telefone = document.getElementById('telefone').value;
+        const email = document.getElementById('email').value;
+
+        adicionarCachorro(nome, dono, telefone, email);
+        fecharModalAdicionar();
+    });
+
+    // Editar cachorro
+    document.getElementById('form-editar').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('id-editar').value);
+        const nome = document.getElementById('nome-editar').value;
+        const dono = document.getElementById('dono-editar').value;
+        const telefone = document.getElementById('telefone-editar').value;
+        const email = document.getElementById('email-editar').value;
+
+        const cachorro = cachorros.find(c => c.id === id);
+        cachorro.nome = nome;
+        cachorro.dono = dono;
+        cachorro.telefone = telefone;
+        cachorro.email = email;
+
+        carregarTabela();
+        fecharModalEditar();
+    });
+
+    // Carregar a tabela ao carregar a página
+    document.addEventListener('DOMContentLoaded', carregarTabela);
+</script>
+
+</body>
+</html>
